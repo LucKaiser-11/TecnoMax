@@ -1,14 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>TecnoMax</title>
+    <meta charset="UTF-8">
+    <title>TecnoMax | Tecnología Inteligente</title>
+    <link rel="stylesheet" href="/static/css/estilo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <h1>Productos destacados</h1>
-    <ul>
-        % for nombre in productos:
-            <li>{{nombre[0]}}</li>
-        % end
-    </ul>
+    <header>
+        <nav class="navbar">
+            <ul class="nav-left">
+                <li><a href="#">Blog</a></li>
+                <li><a href="#">Mi Cuenta</a></li>
+            </ul>
+
+            <div class="logo">
+                <h1>TecnoMax</h1>
+            </div>
+
+            <ul class="nav-right">
+                <li><a href="#">Sobre Nosotros</a></li>
+                <li><a href="#">Tienda</a></li>
+                <li><a href="#"><i class="fas fa-search"></i></a></li>
+                <li><a href="#"><i class="fas fa-user"></i></a></li>
+                <li><a href="#"><i class="fas fa-shopping-bag"></i></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h2>Explorá lo último en tecnología</h2>
+        <p>Productos inteligentes, precios competitivos y soporte confiable.</p>
+        <a href="#" class="btn">Ver productos</a>
+    </section>
+
+    <section class="destacados">
+        <h3>Productos destacados</h3>
+        <div class="grid">
+            <div class="producto">
+                <img src="/static/img/laptop.jpg" alt="Laptop">
+                <h4>Laptop TecnoMax</h4>
+                <p>Potencia y diseño para profesionales.</p>
+            </div>
+            <div class="producto">
+                <img src="/static/img/auriculares.jpg" alt="Auriculares">
+                <h4>Auriculares Pro</h4>
+                <p>Sonido envolvente y cancelación de ruido.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 TecnoMax. Todos los derechos reservados.</p>
+    </footer>
 </body>
 </html>

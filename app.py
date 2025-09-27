@@ -1,7 +1,11 @@
-from bottle import Bottle, run, template
+from bottle import Bottle, run, template, static_file
 from db.conexion import conectar
 
 app = Bottle()
+
+@app.route('/static/<filepath:path>')
+def server_static(filepath):
+    return static_file(filepath, root='./static')
 
 @app.route('/')
 def home():
