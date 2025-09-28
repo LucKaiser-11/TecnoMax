@@ -9,20 +9,21 @@
 <body>
     <header>
         <nav class="navbar">
-            <ul class="nav-left">
-                <li><a href="#">Blog</a></li>
-                <li><a href="#">Mi Cuenta</a></li>
-            </ul>
+            
 
             <div class="logo">
                 <h1>TecnoMax</h1>
             </div>
-
             <ul class="nav-right">
                 <li><a href="#">Sobre Nosotros</a></li>
                 <li><a href="#">Tienda</a></li>
                 <li><a href="#"><i class="fas fa-search"></i></a></li>
-                <li><a href="#"><i class="fas fa-user"></i></a></li>
+                % if usuario:
+                    <li><a href="#">Mi cuenta</a></li>
+                    <li><a href="/logout">Cerrar sesión</a></li>
+                % else:
+                    <li><a href="/login"><i class="fas fa-user"></i></a></li>
+                % end
                 <li><a href="#"><i class="fas fa-shopping-bag"></i></a></li>
             </ul>
         </nav>

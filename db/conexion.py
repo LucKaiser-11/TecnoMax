@@ -6,9 +6,10 @@ def conectar():
             host="localhost",
             user="root",
             password="",
-            database="TecnoMax"
+            database="tecnomax"
         )
+        print("✅ Conexión exitosa a la base de datos")
         return conexion
     except mysql.connector.Error as error:
-        print("Error de conexión:", error)
+        print("❌ Error de conexión:", error)
         return None
