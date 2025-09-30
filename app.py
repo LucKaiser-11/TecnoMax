@@ -1,6 +1,6 @@
 from bottle import Bottle, run, template, static_file, request, redirect , response ,TEMPLATE_PATH, get
 from db.conexion import conectar
-from dat_tecnomax import login_usuario, registrar_usuario, traer_nombres_prod, traer_prod_por_id, traer_productos, get_stats, get_actividades
+from dat_tecnomax import login_usuario, registrar_usuario, traer_nombres_prod, traer_prod_por_id, traer_productos, get_stats, get_actividades , get_usuarios
 import os# importe pq no me daba la pgn
 
 app = Bottle()
@@ -101,5 +101,26 @@ def vista_admin():
                     titulo='Panel de Administración',
                     stats=stats,
                     actividades=get_actividades())
+
+@app.route('/dashboardAdmin')
+@app.route('/dashboardAdmin/<seccion>')
+def vista_admin(seccion='inicio'):
+    rol = request.get_cookie("rol")
+    if rol not in ['admin', 'trabajador']:
+        return redirect('/login')
+
+    stats = get_stats()
+    actividades = get_actividades()
+
+    contenido = {}
+    if seccion == 'usuarios':
+        contenido['usuarios'] = get_usuarios()
+
+    return template('dashboardAdmin',
+                    titulo='Panel de Administración',
+                    stats=stats,
+                    actividades=actividades,
+                    seccion=seccion,
+                    contenido=contenido)
 
 run(app, host='localhost', port=8080, debug=True)

@@ -170,3 +170,18 @@ def get_actividades():
             'cantidad': cantidad
         })
     return actividades
+
+def get_usuarios():
+    conexion = conectar()
+    if not conexion:
+        return []
+
+    cursor = conexion.cursor()
+    cursor.execute("""
+        SELECT p.nombre, p.correo_, r.nombre AS rol
+        FROM persona p
+        JOIN rol r ON p.rol_id = r.id_rol
+    """)
+    usuarios = [{'nombre': u[0], 'correo': u[1], 'rol': u[2]} for u in cursor.fetchall()]
+    conexion.close()
+    return usuarios
