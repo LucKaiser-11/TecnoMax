@@ -68,14 +68,18 @@ def registrar_usuario(request):
         print(f"✅ Usuario registrado: {correo}")
         return redirect('/login')
 #tienda ver todos los productos
-def traer_productos():
+def traer_productos(categoria_id=None):
     productos=[]
     try: 
         conn= conectar()
         if conn:
             cursor= conn.cursor()
-            query = "SELECT id_producto, nombre, precio, categoria_id FROM productos;"
-            cursor.execute(query)
+            if categoria_id:
+                query = "SELECT id_producto, nombre, precio, categoria_id FROM productos WHERE categoria_id = %s;"
+                cursor.execute(query, (categoria_id,))
+            else:
+                query = "SELECT id_producto, nombre, precio, categoria_id FROM productos;"
+                cursor.execute(query)
             resultados = cursor.fetchall()
             productos = [dict(zip(['id_producto','nombre','precio','categoria_id'], fila)) for fila in resultados]
     except mysql.connector.Error as e:
@@ -474,3 +478,212 @@ def traer_persona_por_id(persona_id):
             cursor.close()
             conn.close()
     return persona
+
+def get_categorias():#no deberia tener
+    """Obtiene todas las categorías"""
+    categorias = []
+    try:
+        conn = conectar()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM categorias")
+            for row in cursor.fetchall():
+                columnas = [desc[0] for desc in cursor.description]
+                categorias.append(dict(zip(columnas, row)))
+            conn.close()
+    except Exception as e:
+        print(f"Error al obtener categorías: {e}")
+    return categorias
+
+def get_inventario():
+    """Obtiene el inventario con detalles de productos"""
+    inventario = []
+    try:
+        conn = conectar()
+        if conn:
+            cursor = conn.cursor()
+            query = """
+                SELECT i.*, p.nombre as producto_nombre, p.precio
+                FROM inventario i
+                JOIN productos p ON i.producto_id = p.id_producto
+            """
+            cursor.execute(query)
+            for row in cursor.fetchall():
+                columnas = [desc[0] for desc in cursor.description]
+                inventario.append(dict(zip(columnas, row)))
+            conn.close()
+    except Exception as e:
+        print(f"Error al obtener inventario: {e}")
+    return inventario
+
+def get_registros_bitacora():
+    """Obtiene los registros de la bitácora con detalles del usuario"""
+    registros = []
+    try:
+        conn = conectar()
+        if conn:
+            cursor = conn.cursor()
+            query = """
+                SELECT b.*, p.nombre as usuario_nombre
+                FROM bitacora b
+                JOIN persona p ON b.id_persona = p.id_persona
+                ORDER BY b.fecha DESC
+                LIMIT 100
+            """
+            cursor.execute(query)
+            for row in cursor.fetchall():
+                columnas = [desc[0] for desc in cursor.description]
+                registros.append(dict(zip(columnas, row)))
+            conn.close()
+    except Exception as e:
+        print(f"Error al obtener registros de bitácora: {e}")
+    return registros
+
+def registrar_bitacora(accion, persona_id):
+    """Registra una acción en la bitácora"""
+    try:
+        conn = conectar()
+        if conn:
+            cursor = conn.cursor()
+            query = """
+                INSERT INTO bitacora (accion, fecha, id_persona)
+                VALUES (%s, NOW(), %s)
+            """
+            cursor.execute(query, (accion, persona_id))
+            conn.commit()
+            conn.close()
+            return True
+    except Exception as e:
+        print(f"Error al registrar en bitácora: {e}")
+        return False
+
+def actualizar_stock(producto_id, cantidad, persona_id):
+    """Actualiza el stock de un producto y registra el movimiento"""
+    try:
+        conn = conectar()
+        if conn:
+            cursor = conn.cursor()
+            # Actualizar o insertar en inventario
+            query = """
+                INSERT INTO inventario (producto_id, cantidad_actual, fecha_actualizacion)
+                VALUES (%s, %s, NOW())
+                ON DUPLICATE KEY UPDATE
+                cantidad_actual = %s,
+                fecha_actualizacion = NOW()
+            """
+            cursor.execute(query, (producto_id, cantidad, cantidad))
+            
+            # Registrar movimiento
+            query = """
+                INSERT INTO registro_movimientos 
+                (tipo_movimiento, cantidad, fecha, producto_id, persona_id)
+                VALUES ('actualización_stock', %s, NOW(), %s, %s)
+            """
+            cursor.execute(query, (cantidad, producto_id, persona_id))
+            
+            conn.commit()
+            conn.close()
+            return True
+    except Exception as e:
+        print(f"Error al actualizar stock: {e}")
+        return False
+#productos editar y stock con proveedores
+def get_proveedores():
+    """Obtener todos los proveedores"""
+    proveedores = []
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id_proveedor, nombre FROM proveedores")
+        resultados = cursor.fetchall()
+        proveedores = [dict(zip(['id_proveedor', 'nombre'], fila)) for fila in resultados]
+    except Exception as e:
+        print(f"Error al obtener proveedores: {e}")
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+    return proveedores
+def agregar_producto(nombre, descripcion, precio, categoria_id, proveedor_id, cantidad_inicial, persona_id):
+    """Agregar nuevo producto con proveedor seleccionado - CORREGIDA"""
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+        
+        print(f"🔧 DEBUG: Intentando agregar producto: {nombre}")
+        
+        # Insertar producto
+        query_producto = """
+            INSERT INTO productos (nombre, descripcion, precio, categoria_id, proveedor_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(query_producto, (nombre, descripcion, float(precio), int(categoria_id), int(proveedor_id)))
+        nuevo_id = cursor.lastrowid
+        
+        print(f"✅ Producto insertado con ID: {nuevo_id}")
+        
+        # Insertar en inventario
+        query_inventario = """
+            INSERT INTO inventario (producto_id, cantidad_actual, fecha_actualizacion)
+            VALUES (%s, %s, NOW())
+        """
+        cursor.execute(query_inventario, (nuevo_id, int(cantidad_inicial)))
+        print(" Inventario actualizado")
+        
+        # Registrar en bitácora
+        query_bitacora = "INSERT INTO bitacora (accion, fecha, id_persona) VALUES (%s, NOW(), %s)"
+        cursor.execute(query_bitacora, (f"Agregó producto: {nombre} (ID: {nuevo_id})", int(persona_id)))
+        print(" Bitácora actualizada")
+        
+        conn.commit()
+        print("Commit realizado exitosamente")
+        return True, f"Producto agregado exitosamente (ID: {nuevo_id})"
+        
+    except mysql.connector.Error as e:
+        print(f" Error de MySQL al agregar producto: {e}")
+        if conn:
+            conn.rollback()
+        return False, f"Error de base de datos: {e}"
+    except Exception as e:
+        print(f" Error inesperado al agregar producto: {e}")
+        if conn:
+            conn.rollback()
+        return False, f"Error inesperado: {e}"
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+def get_productos():
+    """Obtiene todos los productos con su categoría y stock - CORREGIDA"""
+    productos = []
+    conn = None
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
+        query = """
+            SELECT p.id_producto, p.nombre, p.descripcion, p.precio, 
+                   c.nombre as categoria_nombre, COALESCE(i.cantidad_actual, 0) as stock
+            FROM productos p
+            LEFT JOIN categorias c ON p.categoria_id = c.id_categoria
+            LEFT JOIN inventario i ON p.id_producto = i.producto_id
+            ORDER BY p.id_producto
+        """
+        cursor.execute(query)
+        resultados = cursor.fetchall()
+        
+        if resultados:
+            columnas = [desc[0] for desc in cursor.description]
+            productos = [dict(zip(columnas, fila)) for fila in resultados]
+        
+        print(f"✅ Se obtuvieron {len(productos)} productos")
+        return productos
+        
+    except Exception as e:
+        print(f"❌ Error al obtener productos: {e}")
+        return []
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()

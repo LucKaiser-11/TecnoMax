@@ -4,10 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/estiloP.css">
     <title>Tienda - Tecnomax</title>
-</head>
+    <link rel="stylesheet" href="/static/css/estilo.css">
+    <link rel="stylesheet" href="/static/css/estiloP.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .categoria-card.active {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border: 2px solid var(--color-acento);
+        }
+    </style>
 <body>
+    <header>
+        <nav class="navbar">            
+            <div class="logo">
+                <h1>🛒 TecnoMax</h1>
+            </div>
+            <ul class="nav-right">
+                
+                <li><a href="/tienda">Tienda</a></li>
+                <li>
+                    <div class="search-bar">
+                        <form action="/busqueda" method="post" class="search-form">
+                            <input type="text" name="filtro" placeholder="Buscar producto...">
+                            <button class="btn btn-primario" type="submit"><i class="fas fa-search"></i>Buscar producto</button>
+                        </form>
+                    </div>
+                    
+                </li>
+
+                % if usuario:
+                    <li><span style="font-weight:bold;color:#2196f3">👤 {{usuario}}</span></li>
+                    <li><a href="#">Mi cuenta</a></li>
+                    <li><a href="/logout">Cerrar sesión</a></li>
+                % else:
+                    <li><a href="/login"><i class="fas fa-user"></i></a></li>
+                % end
+                <li><a href="/agregar-carrito"><i class="fas fa-shopping-bag"></i> Carrito</a></li>
+            </ul>
+        </nav>
+    </header>
     <main>
         <section class="busqueda">
             <h2>Tienda</h2>
@@ -78,5 +115,36 @@
             </div>
         </section>
     </main>
+    <script>
+        // Mapeo de nombres de categorías a IDs
+        const categoriasMap = {
+            'laptops': 1,
+            'smartphones': 2,
+            'audio': 3,
+            'accesorios': 4,
+            'almacenamiento': 5,
+            'perifericos': 6
+        };
+
+        // Agregar manejadores de eventos a las tarjetas de categoría
+        document.querySelectorAll('.categoria-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const categoria = this.dataset.categoria;
+                const categoriaId = categoriasMap[categoria];
+
+                // Remover clase active de todas las categorías
+                document.querySelectorAll('.categoria-card').forEach(c => {
+                    c.classList.remove('active');
+                });
+
+                if (categoriaId) {
+                    // Agregar clase active a la categoría seleccionada
+                    this.classList.add('active');
+                    // Redirigir a la vista filtrada
+                    window.location.href = `/tienda/categoria/${categoriaId}`;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

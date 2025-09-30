@@ -1,33 +1,28 @@
-from bottle import Bottle, run, template, static_file, request, redirect , response ,TEMPLATE_PATH, get
+from bottle import Bottle, run, template, static_file, request, redirect, response, TEMPLATE_PATH
 from db.conexion import conectar
-from dat_tecnomax import login_usuario, registrar_usuario, traer_nombres_prod, traer_prod_por_id, traer_productos, get_stats, get_actividades, get_usuarios , calcular_total_carrito, obtener_carrito, actualizar_cantidad_carrito,  agregar_al_carrito,eliminar_del_carrito, contar_items_carrito, finalizar_compra, traer_persona_por_id
-import os# importe pq no me daba la pgn
-import os# importe pq no me daba la pgn
+from dat_tecnomax import (
+    login_usuario, registrar_usuario, traer_nombres_prod, traer_prod_por_id, 
+    traer_productos, get_stats, get_actividades, get_usuarios, calcular_total_carrito, 
+    obtener_carrito, actualizar_cantidad_carrito, agregar_al_carrito, eliminar_del_carrito, 
+    contar_items_carrito, finalizar_compra, traer_persona_por_id, registrar_bitacora, 
+    actualizar_stock, agregar_producto, get_proveedores, get_categorias, get_productos
+)
+import os
 
 app = Bottle()
 
-RUTA_VIEWS = os.path.join(os.path.dirname(__file__), 'views')# importe pq no me daba la pgn
-TEMPLATE_PATH.insert(0, RUTA_VIEWS)# importe pq no me daba la pgn
+RUTA_VIEWS = os.path.join(os.path.dirname(__file__), 'views')
+TEMPLATE_PATH.insert(0, RUTA_VIEWS)
 
 @app.route('/static/<filepath:path>')
 def server_static(filepath):
-    #return static_file(filepath, root='./static') ESTABA ANTES
-    print(f"Solicitando archivo estático: {filepath}")
     static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
-    print(f"Directorio estático: {static_dir}")
-    full_path = os.path.join(static_dir, filepath)
-    print(f"Ruta completa: {full_path}")
-    if os.path.exists(full_path):
-        print(f"El archivo existe: {full_path}")
-        return static_file(filepath, root=static_dir)
-    else:
-        print(f"Archivo no encontrado: {full_path}")
-        return 'Archivo no encontrado', 404
+    return static_file(filepath, root=static_dir)
 
 @app.route('/')
 def home():
-    persona_id = request.get_cookie("persona_id")#usuario_id = request.get_cookie("usuario_id")
-    rol = request.get_cookie("rol")# no estaba
+    persona_id = request.get_cookie("persona_id")
+    rol = request.get_cookie("rol")
     conexion = conectar()
     if conexion:
         cursor = conexion.cursor()
@@ -35,21 +30,21 @@ def home():
         productos = cursor.fetchall()
 
         usuario = None
-        if persona_id:#if usuario_id:
+        if persona_id:
             cursor.execute("SELECT nombre FROM persona WHERE id_persona = %s", (persona_id,))
             resultado = cursor.fetchone()
             if resultado:
                 usuario = resultado[0]
 
         conexion.close()
-        return template('index', productos=productos, usuario=usuario, rol=rol)# return template('index', productos=productos, usuario=usuario)
+        return template('index', productos=productos, usuario=usuario, rol=rol)
     else:
         return "Error al conectar con la base de datos"
-# Mostrar formulario de login/registro
+
 @app.route('/login')
 def mostrar_login():
     return template('login')
-# Procesar login o registro desde el mismo formulario
+
 @app.post('/login')
 def procesar_login():
     accion = request.forms.get('accion')
@@ -62,59 +57,86 @@ def procesar_login():
 
 @app.route('/logout')
 def cerrar_sesion():
-    response.delete_cookie("persona_id", path='/')# response.delete_cookie("usuario_id", path='/')
-    response.delete_cookie("rol", path='/')#print("🔒 Sesión cerrada")
+    response.delete_cookie("persona_id", path='/')
+    response.delete_cookie("rol", path='/')
     return redirect('/')
-#tienda ver todos los productos
+
+@app.route('/tienda/categoria/<categoria_id:int>')
+def do_tienda_categoria(categoria_id):
+    productos = traer_productos(categoria_id)
+    persona_id = request.get_cookie("persona_id")
+    rol = request.get_cookie("rol")
+    usuario = None
+    if persona_id:
+        conexion = conectar()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("SELECT nombre FROM persona WHERE id_persona = %s", (persona_id,))
+            resultado = cursor.fetchone()
+            if resultado:
+                usuario = resultado[0]
+            conexion.close()
+    if not productos:
+        return "Error, no se encontraron productos en esta categoría"
+    return template("tienda", todo=productos, usuario=usuario, rol=rol)
+
 @app.route('/tienda')
 def do_tienda():
-    productos= traer_productos()
+    productos = traer_productos()
+    persona_id = request.get_cookie("persona_id")
+    rol = request.get_cookie("rol")
+    usuario = None
+    if persona_id:
+        conexion = conectar()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("SELECT nombre FROM persona WHERE id_persona = %s", (persona_id,))
+            resultado = cursor.fetchone()
+            if resultado:
+                usuario = resultado[0]
+            conexion.close()
     if not productos:
         return "Error, no se encontro el producto su descripcion "
-    return template("tienda", todo=productos)
-#buscar
+    return template("tienda", todo=productos, usuario=usuario, rol=rol)
+
 @app.route('/busqueda', method='POST')
 def do_busprod():
     filtro = request.forms.get('filtro')
-    if not filtro:#ya no len
+    if not filtro:
         return "Debe escribir algo en el filtro"
     lista = traer_nombres_prod(filtro)
-    if not lista:#if len(lista)==0:
+    if not lista:
         return "No se encontro ningún producto"
-
     return template("busqueda_result", productos=lista)
+
 @app.route('/producto/<id>')
-def do_producto(id):#ruta, endpoint, controladores producto inf
-    info= traer_prod_por_id(id)
-    
+def do_producto(id):
+    info = traer_prod_por_id(id)
     if not info:
         return "Error, no se encontro el producto su descripcion "
     return template("producto_detalle", producto=info)
 
-@app.route('/dashboardAdmin')
-def vista_admin():
-    rol = request.get_cookie("rol")
-    if rol not in ['admin', 'trabajador']:
-        return redirect('/login')
-    stats = get_stats()
-    print("DEBUG stats:", stats)  # 👈 esto te muestra en consola lo que se está enviando
-    return template('dashboardAdmin',
-                    titulo='Panel de Administración',
-                    stats=stats,
-                    actividades=get_actividades())
+# ✅ RUTA ÚNICA PARA DASHBOARD ADMIN (elimina las duplicadas)
 @app.route('/dashboardAdmin')
 @app.route('/dashboardAdmin/<seccion>')
 def vista_admin(seccion='inicio'):
+    persona_id = request.get_cookie("persona_id")
     rol = request.get_cookie("rol")
-    if rol not in ['admin', 'trabajador']:
+    
+    # Verificar que está logueado y es admin o trabajador
+    if not persona_id or rol not in ['admin', 'trabajador']:
         return redirect('/login')
 
     stats = get_stats()
     actividades = get_actividades()
-
     contenido = {}
+    
     if seccion == 'usuarios':
         contenido['usuarios'] = get_usuarios()
+    elif seccion == 'productos':
+        contenido['productos'] = get_productos()
+        contenido['categorias'] = get_categorias()
+        contenido['proveedores'] = get_proveedores()
 
     return template('dashboardAdmin',
                     titulo='Panel de Administración',
@@ -122,20 +144,18 @@ def vista_admin(seccion='inicio'):
                     actividades=actividades,
                     seccion=seccion,
                     contenido=contenido)
+
 @app.route('/carrito')
 def ver_carrito():
-    """Muestra la página del carrito"""
     persona_id = request.get_cookie('persona_id')
     if not persona_id:
         return redirect('/login')
     carrito = obtener_carrito(int(persona_id))
     subtotal = calcular_total_carrito(int(persona_id))
-    
-    return template('carrito',   carrito=carrito, subtotal=subtotal,   total=subtotal)
+    return template('carrito', carrito=carrito, subtotal=subtotal, total=subtotal)
 
 @app.route('/agregar-carrito', method='POST')
 def do_agregar_carrito():
-    """Agregar producto al carrito"""
     persona_id = request.get_cookie('persona_id')
     if not persona_id:
         return redirect('/login')
@@ -145,23 +165,19 @@ def do_agregar_carrito():
     if not producto_id:
         return "Producto no válido"
     
-    resultado, mensaje = agregar_al_carrito(  int(persona_id), int(producto_id),  int(cantidad) )
+    resultado, mensaje = agregar_al_carrito(int(persona_id), int(producto_id), int(cantidad))
     if resultado:
-        redirect('/carrito')
+        return redirect('/carrito')  # ✅ FALTABA 'return'
     else:
         return template('error', mensaje=mensaje)
 
-
 @app.route('/actualizar-carrito', method='POST')
 def do_actualizar_carrito():
-    """Actualizar cantidades del carrito"""
     persona_id = request.get_cookie('persona_id')
-    
     if not persona_id:
         return redirect('/login')
     
     carrito = obtener_carrito(int(persona_id))
-    
     for item in carrito:
         nueva_cantidad = request.forms.get(f"cantidad_{item['id_carrito']}")
         if nueva_cantidad and nueva_cantidad.isdigit():
@@ -169,49 +185,37 @@ def do_actualizar_carrito():
     
     return redirect('/carrito')
 
-
 @app.route('/eliminar-carrito/<id_carrito>', method='POST')
 def do_eliminar_carrito(id_carrito):
-    """Eliminar producto del carrito"""
     persona_id = request.get_cookie('persona_id')
-    
     if not persona_id:
         return redirect('/login')
     
     eliminar_del_carrito(int(id_carrito))
-    redirect('/carrito')
-
+    return redirect('/carrito')  # ✅ FALTABA 'return'
 
 @app.route('/checkout')
 def ver_checkout():
-    """Página de checkout (formulario de compra)"""
     persona_id = request.get_cookie('persona_id')
-    
     if not persona_id:
         return redirect('/login')
     
     carrito = obtener_carrito(int(persona_id))
-    
     if not carrito:
-        redirect('/carrito')
+        return redirect('/carrito')  # ✅ FALTABA 'return'
     
     subtotal = calcular_total_carrito(int(persona_id))
-    
-    # Obtener datos del usuario para prellenar el formulario
     usuario = traer_persona_por_id(int(persona_id))
-    
-    return template('checkout',    carrito=carrito, subtotal=subtotal,    usuario=usuario)
+    return template('checkout', carrito=carrito, subtotal=subtotal, usuario=usuario)
 
 @app.route('/procesar-compra', method='POST')
 def do_procesar_compra():
-    """Finalizar la compra (procesa el pedido)"""
     persona_id = request.get_cookie('persona_id')
-    
     if not persona_id:
         return redirect('/login')
     
     direccion = request.forms.get('direccion_entrega')
-    metodo_pago = request.forms.get('metodo_pago', 'efectivo')  # valor por defecto: efectivo
+    metodo_pago = request.forms.get('metodo_pago', 'efectivo')
     
     if not direccion:
         return "Debe ingresar una dirección de entrega"
@@ -219,18 +223,13 @@ def do_procesar_compra():
     resultado, dato = finalizar_compra(int(persona_id), metodo_pago, direccion)
     
     if resultado:
-        # dato contiene el pedido_id
         return template('compra_exitosa', pedido_id=dato)
     else:
-        # dato contiene el mensaje de error
         return template('error', mensaje=dato)
-
 
 @app.route('/api/cantidad-carrito')
 def api_cantidad_carrito():
-    """API para obtener cantidad de items (para mostrar en el header)"""
-    persona_id = request.get_cookie('usuario_id')
-    
+    persona_id = request.get_cookie('persona_id') 
     if not persona_id:
         response.content_type = 'application/json'
         return '{"cantidad": 0}'   
@@ -238,4 +237,76 @@ def api_cantidad_carrito():
     response.content_type = 'application/json'
     return f'{{"cantidad": {cantidad}}}'
 
-run(app, host='localhost', port=8080, debug=True)
+
+@app.route('/admin/producto', method='POST')
+def guardar_producto():
+    persona_id = request.get_cookie("persona_id")
+    rol = request.get_cookie("rol")
+    
+    if not persona_id or rol not in ['admin', 'trabajador']:
+        return redirect('/login')
+    
+    # Obtener datos del formulario
+    nombre = request.forms.get('nombre')
+    descripcion = request.forms.get('descripcion')
+    precio = request.forms.get('precio')
+    categoria_id = request.forms.get('categoria_id')
+    proveedor_id = request.forms.get('proveedor_id')
+    cantidad = request.forms.get('cantidad', 0)
+    
+    print(f"🔧 DEBUG: Datos del formulario - nombre: {nombre}, categoria: {categoria_id}, proveedor: {proveedor_id}")
+    
+    if not all([nombre, descripcion, precio, categoria_id, proveedor_id]):
+        return "❌ Faltan datos obligatorios"
+    
+    try:
+        resultado, mensaje = agregar_producto(
+            nombre, descripcion, float(precio), 
+            int(categoria_id), int(proveedor_id), int(cantidad), int(persona_id)
+        )
+    except Exception as e:
+        print(f"Error en guardar_producto: {e}")
+        return template('error', mensaje=f"Error al procesar: {e}")
+    
+    if resultado:
+        print(f" Producto guardado exitosamente: {mensaje}")
+        return redirect('/dashboardAdmin/productos')
+    else:
+        print(f" Error al guardar producto: {mensaje}")
+        return template('error', mensaje=mensaje)
+
+
+@app.route('/admin/stock', method='POST')
+def actualizar_stock_route():
+    persona_id = request.get_cookie("persona_id")
+    rol = request.get_cookie("rol")
+    
+    if not persona_id or rol not in ['admin', 'trabajador']:
+        return redirect('/login')
+    
+    producto_id = request.forms.get('producto_id')
+    cantidad = request.forms.get('cantidad')
+    
+    if not producto_id or not cantidad:
+        return "❌ Faltan datos"
+    
+    if actualizar_stock(int(producto_id), int(cantidad), int(persona_id)):
+        registrar_bitacora(f"Actualizó el stock del producto ID:{producto_id} a {cantidad}", persona_id)
+        return redirect('/dashboardAdmin/productos') 
+        return template('error', mensaje="Error al actualizar stock")
+
+@app.route('/dashboardAdmin/productos/stock/<id:int>')
+def form_stock_producto(id):
+    persona_id = request.get_cookie("persona_id")
+    rol = request.get_cookie("rol")
+    
+    if not persona_id or rol not in ['admin', 'trabajador']:
+        return redirect('/login')
+    
+    producto = traer_prod_por_id(id)
+    if not producto:
+        return "Producto no encontrado"
+    return template('form_stock', producto=producto)
+
+if __name__ == '__main__':
+    run(app, host='localhost', port=8080, debug=True)

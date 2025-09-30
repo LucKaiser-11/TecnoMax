@@ -37,11 +37,7 @@
                         <span>Gestionar Productos</span>
                     </a>
                 </li>
-                <li class="menu-item">
-                    <a href="/dashboardAdmin/inventario" class="menu-link">
-                        <span>Gestionar Inventario</span>
-                    </a>
-                </li>
+                
                 <li class="menu-item">
                     <a href="/dashboardAdmin/pedidos" class="menu-link">
                         <span>Gestionar Pedidos</span>
@@ -127,6 +123,151 @@
                                 <td>{{ u['nombre'] }}</td>
                                 <td>{{ u['correo'] }}</td>
                                 <td>{{ u['rol'] }}</td>
+                            </tr>
+                            % end
+                        </tbody>
+                    </table>
+                </div>
+
+            % elif seccion == 'productos':
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Gestión de Productos</h2>
+                        <button onclick="mostrarFormularioProducto()" class="btn-add">Agregar Producto</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Precio</th>
+                                <th>Categoría</th>
+                                <th>Stock</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            % for p in contenido.get('productos', []):
+                            <tr>
+                                <td>{{ p['id_producto'] }}</td>
+                                <td>{{ p['nombre'] }}</td>
+                                <td>{{ p.get('descripcion', '') }}</td>
+                                <td>Bs. {{ p['precio'] }}</td>
+                                <td>{{ p['categoria_nombre'] }}</td>
+                                <td>
+                                    <span class="badge {{ 'danger' if p['stock'] < 10 else 'warning' if p['stock'] < 20 else 'success' }}">
+                                        {{ p['stock'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    
+                                    <a href="/dashboardAdmin/productos/stock/{{ p['id_producto'] }}" class="btn-stock">Aumentar Stock</a>
+                                </td>
+                            </tr>
+                            % end
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Modal para agregar/editar producto -->
+                <div id="modalProducto" class="modal">
+                    <div class="modal-content">
+                        <h3>Agregar Producto</h3>
+                        <form id="formProducto" action="/admin/producto" method="POST">
+                            <input type="hidden" name="id_producto" id="id_producto">
+                            
+                            <div class="form-group">
+                                <label>Nombre:</label>
+                                <input type="text" name="nombre" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Descripción:</label>
+                                <textarea name="descripcion" required></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Precio (Bs.):</label>
+                                <input type="number" name="precio" step="0.01" min="0" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Categoría:</label>
+                                <select name="categoria_id" required>
+                                    <option value="">Seleccionar categoría</option>
+                                    % for c in contenido.get('categorias', []):
+                                    <option value="{{ c['id_categoria'] }}">{{ c['nombre'] }}</option>
+                                    % end
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Proveedor:</label>
+                                <select name="proveedor_id" required>
+                                    <option value="">Seleccionar proveedor</option>
+                                    % for prov in contenido.get('proveedores', []):
+                                    <option value="{{ prov['id_proveedor'] }}">{{ prov['nombre'] }}</option>
+                                    % end
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Stock Inicial:</label>
+                                <input type="number" name="cantidad" min="0" value="0" required>
+                            </div>
+                            
+                            <div class="modal-buttons">
+                                <button type="submit" class="btn-save">Guardar Producto</button>
+                                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+             <!-- Modal para ajustar stock -->
+            <div id="modalStock" class="modal">
+                <div class="modal-content">
+                    <h3>Ajustar Stock</h3>
+                    <form id="formStock" action="/admin/stock" method="POST">
+                        <input type="hidden" name="producto_id" id="stock_producto_id">
+                        
+                        <div class="form-group">
+                            <label>Producto:</label>
+                            <input type="text" id="stock_producto_nombre" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Nueva Cantidad:</label>
+                            <input type="number" name="cantidad" min="0" required>
+                        </div>
+                        
+                        <div class="modal-buttons">
+                            <button type="submit" class="btn-save">Actualizar Stock</button>
+                            <button type="button" onclick="cerrarModalStock()" class="btn-cancel">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            % elif seccion == 'bitacora':
+                <div class="card">
+                    <h2>Registro de Actividades</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            % for r in contenido.get('registros', []):
+                            <tr>
+                                <td>{{ r['fecha'] }}</td>
+                                <td>{{ r['usuario_nombre'] }}</td>
+                                <td>{{ r['accion'] }}</td>
+                                <td>{{ r.get('ip_origen', 'N/A') }}</td>
                             </tr>
                             % end
                         </tbody>
@@ -445,4 +586,146 @@
                 display: block;
             }
         }
+            /* Estilos para la gestión de productos */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-add {
+            background-color: #22c55e;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-add:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-edit {
+            background-color: #3b82f6;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 4px;
+        }
+
+        .btn-edit:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-stock {
+            background-color: #f59e0b;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-stock:hover {
+            background-color: #d97706;
+        }
+
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+        }
+
+        .modal-content {
+            background-color: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            background-color: #22c55e;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background-color: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
+
+    <script>
+        function mostrarFormularioProducto() {
+            document.getElementById('modalProducto').style.display = 'block';
+            document.getElementById('id_producto').value = '';
+            document.getElementById('formProducto').reset();
+        }
+
+        function editarProducto(id) {
+            document.getElementById('modalProducto').style.display = 'block';
+            document.getElementById('id_producto').value = id;
+            // Aquí deberías cargar los datos del producto
+        }
+
+        function ajustarStock(id) {
+            document.getElementById('modalStock').style.display = 'block';
+            document.getElementById('stock_producto_id').value = id;
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalProducto').style.display = 'none';
+        }
+
+        function cerrarModalStock() {
+            document.getElementById('modalStock').style.display = 'none';
+        }
+    </script>
+```
