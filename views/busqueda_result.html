@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/estiloP.css">
+    <title>Búsqueda de Productos</title>
+</head>
+<body>
+    <main>
+        <section class="busqueda">
+            <h2>Resultados de búsqueda</h2>
+                % if productos:
+                        <div class="grid-productos">
+                            % for p in productos:
+                                <div class="producto-card">
+                                    <div class="producto-card-content">
+                                        <h3>
+                                            <a href="/producto/{{p['id_producto']}}">{{p['nombre']}}</a>
+                                        </h3>
+                                        <p><b>Bs.</b>{{p['precio']}}</p>
+                                    </div>
+                                </div>
+                            % end
+                        </div>
+                    % else:
+                        <div class="sin-resultados">
+                    <p> No se encontraron productos que coincidan con tu búsqueda.</p>
+                    <a href="/" class="btn btn-primario">Volver a la tienda</a>
+                </div>
+            % end
+        </section>
+        
+        <a href="/" class="volver-link">← Volver al inicio</a>
+    </main>
+</body>
+</html>

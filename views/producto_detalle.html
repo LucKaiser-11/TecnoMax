@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/estiloP.css">
+    <title>{{producto['nombre']}} - Detalle</title>
+</head>
+<body>
+    <main>
+        <div class="breadcrumb">
+            <a href="/">Inicio</a> / 
+            <a href="/tienda">Tienda</a> / 
+            <span>{{producto['nombre']}}</span>
+        </div>
+        
+        <!-- DETALLE DEL PRODUCTO -->
+        <div class="producto-detalle">
+            <div class="producto-detalle-container">
+                <!-- IMAGEN PRINCIPAL -->
+                <div class="producto-imagen-principal">
+                    <img src="/static/img/laptop.jpg" alt="{{producto.get('nombre', 'Producto')}}">
+                </div>
+                
+                <!-- INFORMACIÓN DEL PRODUCTO -->
+                <div class="producto-info">
+                    <div class="producto-categoria">
+                        Categoría {{producto.get('categoria_id', 'No especificada')}}
+                    </div>
+                    
+                    <h1>{{producto.get('nombre', 'Producto sin nombre')}}</h1>
+                    
+                    <div class="producto-precio">
+                        Bs. {{producto.get('precio', '0.00')}}
+                    </div>
+                    
+                    <div class="producto-descripcion">
+                        <p>{{producto.get('descripcion', 'Sin descripción disponible')}}</p>
+                    </div>
+                    
+                    <!-- CANTIDAD Y BOTÓN DE COMPRA -->
+                    <form action="/agregar-carrito" method="POST">
+                        <input type="hidden" name="producto_id" value="{{producto['id_producto']}}">
+                        
+                        <div class="producto-cantidad">
+                            <label for="cantidad">Cantidad:</label>
+                            <input type="number" id="cantidad" name="cantidad" value="1" min="1" max="10">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primario btn-block">
+                            Añadir al carrito
+                        </button>
+                    </form>
+                    
+                    <!-- INFORMACIÓN ADICIONAL -->
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--color-primario);">
+                            Información adicional
+                        </h3>
+                        <ul style="list-style: none; color: var(--color-texto-claro);">
+                            <li style="padding: 0.5rem 0;">✓ Envío gratuito en compras superiores a Bs. 500</li>
+                            <li style="padding: 0.5rem 0;">✓ Garantía de 12 meses</li>
+                            <li style="padding: 0.5rem 0;">✓ Devolución en 30 días</li>
+                            <li style="padding: 0.5rem 0;">✓ Atención al cliente 24/7</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <a href="/tienda" class="volver-link">← Volver a la tienda</a>
+    </main>
+    
+    <a href="/">Volver al inicio</a>
+
+</body>
+</html>

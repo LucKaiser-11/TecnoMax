@@ -1,0 +1,84 @@
+
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/estiloP.css">
+    <title>Tienda - Tecnomax</title>
+</head>
+<body>
+    <main>
+        <section class="busqueda">
+            <h2>Tienda</h2>
+            <div class="categorias-slider">
+                <div class="categorias-container">
+                    <div class="categoria-card" data-categoria="laptops">
+                        <div class="categoria-card-content">
+                            <h3>Laptops</h3>
+                            <p>Equipos portátiles para trabajo</p>
+                        </div>
+                    </div>
+                    
+                    <div class="categoria-card" data-categoria="smartphones">
+                        <div class="categoria-card-content">
+                            <h3>Smartphones</h3>
+                            <p>Teléfonos inteligentes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="categoria-card" data-categoria="audio">
+                        <div class="categoria-card-content">
+                            <h3>Audio</h3>
+                            <p>Auriculares y parlantes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="categoria-card" data-categoria="accesorios">
+                        <div class="categoria-card-content">
+                            <h3>Accesorios</h3>
+                            <p>Cables, fundas y más</p>
+                        </div>
+                    </div>
+                    
+                    <div class="categoria-card" data-categoria="almacenamiento">
+                        <div class="categoria-card-content">
+                            <h3>Almacenamiento</h3>
+                            <p>Discos y memorias</p>
+                        </div>
+                    </div>
+                    
+                    <div class="categoria-card" data-categoria="perifericos">
+                        <div class="categoria-card-content">
+                            <h3>Periféricos</h3>
+                            <p>Teclados y mouse</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+           
+
+            <!-- GRID DE PRODUCTOS -->
+            <div class="grid-productos">
+                % for p in todo:
+                    <div class="producto-card">
+                        <div class="producto-imagen">
+                            <img src="/static/img/laptop.jpg" alt="{{p.get('nombre', 'Producto')}}">
+                        </div>
+                        <div class="producto-card-content">
+                            <h3>
+                                <a href="/producto/{{p.get('id_producto', '')}}">{{p.get('nombre', 'Sin nombre')}}</a>
+                            </h3>
+                            <p>Bs. {{p.get('precio', '0.00')}}</p>
+                            % if p.get('descripcion'):
+                            <p class="descripcion">{{p.get('descripcion')}}</p>
+                            % end
+                        </div>
+                    </div>
+                % end
+            </div>
+        </section>
+    </main>
+</body>
+</html>

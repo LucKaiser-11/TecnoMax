@@ -10,7 +10,7 @@ TEMPLATE_PATH.insert(0, RUTA_VIEWS)# importe pq no me daba la pgn
 
 @app.route('/static/<filepath:path>')
 def server_static(filepath):
-    #return static_file(filepath, root='./static')
+    #return static_file(filepath, root='./static') ESTABA ANTES
     print(f"Solicitando archivo estático: {filepath}")
     static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     print(f"Directorio estático: {static_dir}")
