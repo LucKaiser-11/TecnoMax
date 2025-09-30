@@ -1,4 +1,6 @@
 from bottle import redirect, response, template, request
+import hashlib
+import mysql.connector
 from db.conexion import conectar
 
 def login_usuario(request):
@@ -37,38 +39,84 @@ def login_usuario(request):
         return template('login', error='Credenciales incorrectas')
 
 def registrar_usuario(request):
-    nombre = request.forms.get('nombre')
-    apellidoPat = request.forms.get('apellidoPat')
-    apellidoMat = request.forms.get('apellidoMat')
-    correo = request.forms.get('correo_reg')
-    direccion = request.forms.get('direccion')
-    telefono = request.forms.get('telefono')
-    contrase = request.forms.get('pass_reg')
-
-    if not (nombre and correo and contrase):
-        return "⚠️ Faltan datos obligatorios"
-
-    conexion = conectar()
-    if not conexion:
-        return "❌ Error al conectar con la base de datos"
-
-    cursor = conexion.cursor()
-    cursor.execute("SELECT id_rol FROM rol WHERE nombre = 'cliente'")
-    resultado = cursor.fetchone()
-    rol_cliente = resultado[0] if resultado else 2
-
-    cursor.execute("SELECT id_persona FROM persona WHERE correo_ = %s", (correo,))
-    if cursor.fetchone():
+        nombre = request.forms.get('nombre')
+        apellidoPat = request.forms.get('apellidoPat')
+        apellidoMat = request.forms.get('apellidoMat')
+        correo = request.forms.get('correo_reg')
+        direccion = request.forms.get('direccion')
+        telefono = request.forms.get('telefono')
+        contrase = request.forms.get('pass_reg')
+        if not (nombre and correo and contrase):
+            return "⚠️ Faltan datos obligatorios"
+        conexion = conectar()
+        if not conexion:
+            return "❌ Error al conectar con la base de datos"
+        cursor = conexion.cursor()
+        cursor.execute("SELECT id_rol FROM rol WHERE nombre = 'cliente'")
+        resultado = cursor.fetchone()
+        rol_cliente = resultado[0] if resultado else 2
+        cursor.execute("SELECT id_persona FROM persona WHERE correo_ = %s", (correo,))
+        if cursor.fetchone():
+            conexion.close()
+            return "⚠️ Ya existe una cuenta con ese correo"
+        cursor.execute("""
+            INSERT INTO persona (nombre, apellidoPat, apellidoMat, correo_, direccion, telefono, contrase, rol_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (nombre, apellidoPat, apellidoMat, correo, direccion, telefono, contrase, rol_cliente))
+        conexion.commit()
         conexion.close()
-        return "⚠️ Ya existe una cuenta con ese correo"
-
-    cursor.execute("""
-        INSERT INTO persona (nombre, apellidoPat, apellidoMat, correo_, direccion, telefono, contrase, rol_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (nombre, apellidoPat, apellidoMat, correo, direccion, telefono, contrase, rol_cliente))
-    conexion.commit()
-    conexion.close()
-    return redirect('/login')
+        print(f"✅ Usuario registrado: {correo}")
+        return redirect('/login')
+#tienda ver todos los productos
+def traer_productos():
+    productos=[]
+    try: 
+        conn= conectar()
+        if conn:
+            cursor= conn.cursor()
+            query = "SELECT id_producto, nombre, precio, categoria_id FROM productos;"
+            cursor.execute(query)
+            resultados = cursor.fetchall()
+            productos = [dict(zip(['id_producto','nombre','precio','categoria_id'], fila)) for fila in resultados]
+    except mysql.connector.Error as e:
+        print(f"Error al ejecutar la consulta: {e}")
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+    return productos
+ #busqueda 
+def traer_nombres_prod(filtro):
+    prod = []
+    try:
+        conn = conectar()
+        if conn:
+            cursor=conn.cursor()
+            query = "SELECT id_producto, nombre, precio FROM productos WHERE nombre LIKE %s;"
+            cursor.execute(query, ("%" + filtro + "%",))
+            resultados = cursor.fetchall()
+            prod = [dict(zip(['id_producto', 'nombre','precio' ], fila)) for fila in resultados]
+    except mysql.connector.Error as e:
+        print(f"Error al ejecutar la consulta: {e}")
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+    return prod
+#inf de cada producto
+def traer_prod_por_id(id):
+    producto = None
+    try:
+        conn=conectar() #with obtener_conexion_bd(conf) as conn:
+        if conn: #with conn.cursor() as cursor:
+            cursor=conn.cursor()
+            query = "select * FROM productos WHERE id_producto = %s;"
+            cursor.execute(query, (int(id),))
+            resultado = cursor.fetchone()
+            if resultado:
+                columnas = [desc[0] for desc in cursor.description]
+                producto = dict(zip(columnas, resultado))
+    except mysql.connector.Error as e:
+        print(f"Error al ejecutar la consulta: {e}")
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+    return producto
 
 def get_stats():
     conexion = conectar()

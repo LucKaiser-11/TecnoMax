@@ -18,8 +18,14 @@
                 % if rol in ['admin', 'trabajador']:
                     <li><a href="/admin">Dashboard</a></li>
                 % end
-                <li><a href="#">Tienda</a></li>
-                <li><a href="#"><i class="fas fa-search"></i></a></li>
+                <li><a href="/tienda">Tienda</a></li>
+                <li>
+                    <form action="/busqueda" method="post" class="search-form">
+                        <input type="text" name="filtro" placeholder="Buscar producto...">
+                        <button type="submit"><i class="fas fa-search"></i>Buscar producto</button>
+                    </form>
+                </li>
+
                 % if usuario:
                     <li><a href="#">Mi cuenta</a></li>
                     <li><a href="/logout">Cerrar sesión</a></li>
@@ -34,7 +40,7 @@
     <section class="hero">
         <h2>Explorá lo último en tecnología</h2>
         <p>Productos inteligentes, precios competitivos y soporte confiable.</p>
-        <a href="#" class="btn">Ver productos</a>
+        <a href="/tienda" class="btn">Ver productos</a> <!--Opcional ya hay tienda-->-->
     </section>
 
     <section class="destacados">
