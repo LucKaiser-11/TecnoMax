@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestión de TecnoMax</title>
+</head>
+<body>
+      
+    <input type="checkbox" id="sidebar-toggle">
+    
+      
+    <label for="sidebar-toggle" class="overlay"></label>
+
+      
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Dashboard</h2>
+        </div>
+        <nav>
+            <ul class="menu">
+                <li class="menu-item">
+                    <a href="/usuarios" class="menu-link">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        <span>Gestionar Usuarios</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/categorias" class="menu-link">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12 2l-5.5 9h11z M17.5 13h-11l5.5 9z M3 13h8v8H3z"/>
+                        </svg>
+                        <span>Gestionar Categorías</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/productos" class="menu-link">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/>
+                        </svg>
+                        <span>Gestionar Productos</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/inventario" class="menu-link">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zM19 20H5V9h14v11zm1-13H4V4h16v3z"/>
+                        </svg>
+                        <span>Gestionar Inventario</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/pedidos" class="menu-link">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                        </svg>
+                        <span>Gestionar Pedidos</span>
+                    </a>
+                </li>
+                <li class="menu-item logout">
+                    <a href="/logout" class="menu-link">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                        </svg>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+     
+    <main class="main-content">
+        <header class="header">
+            <h1>{{ titulo }}</h1>
+            <label for="sidebar-toggle" class="menu-toggle-label">
+                <div class="hamburger"></div>
+            </label>
+        </header>
+
+        <div class="content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Usuarios</h3>
+                    <div class="value">{{ stats.get('usuarios', 'N/A') }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Productos</h3>
+                    <div class="value">{{ stats.get('productos', 'N/A') }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pedidos Pendientes</h3>
+                    <div class="value">{{ stats.get('pedidos', 'N/A') }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Inventario Bajo</h3>
+                    <div class="value">{{ stats.get('inventario_bajo', 'N/A') }}</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Actividad Reciente</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Fecha</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        % for actividad in actividades:
+                        <tr>
+                            <td>{{ actividad['usuario'] }}</td>
+                            <td>{{ actividad['accion'] }}</td>
+                            <td>{{ actividad['fecha'] }}</td>
+                            <td><span class="badge">{{ actividad['cantidad'] }}</span></td>
+                        </tr>
+                        % end
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Checkbox oculto para controlar el sidebar */
+        #sidebar-toggle {
+            display: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            padding: 20px 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .menu-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .menu-link.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .menu-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            fill: currentColor;
+        }
+
+        /* Submenú con checkbox */
+        .submenu-toggle {
+            display: none;
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .submenu-toggle:checked ~ .submenu {
+            max-height: 200px;
+        }
+
+        .submenu-link {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .submenu-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .menu-link.has-submenu::after {
+            content: '▼';
+            margin-left: auto;
+            font-size: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .submenu-toggle:checked + .menu-link.has-submenu::after {
+            transform: rotate(180deg);
+        }
+
+        .logout {
+            margin-top: 275px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 11px;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1e293b;
+        }
+
+        .menu-toggle-label {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .hamburger {
+            width: 25px;
+            height: 3px;
+            background-color: #1e293b;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger::before,
+        .hamburger::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background-color: #1e293b;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger::before {
+            top: -8px;
+        }
+
+        .hamburger::after {
+            top: 8px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge.success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .badge.warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            #sidebar-toggle:checked ~ .sidebar {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle-label {
+                display: block;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Overlay para cerrar sidebar en móvil */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar-toggle:checked ~ .overlay {
+                display: block;
+            }
+        }
+    </style>

@@ -1,58 +1,124 @@
-from bottle import redirect, response
-import hashlib
+from bottle import redirect, response, template, request
 from db.conexion import conectar
 
 def login_usuario(request):
     correo = request.forms.get('correo')
     contraseña = request.forms.get('password')
-    print("📩 Datos recibidos:")
-    print("correo =", repr(correo))
-    print("contraseña =", repr(contraseña))
+
     if not correo or not contraseña:
-        return "⚠️ Faltan datos en el formulario"
+        return template('login', error='⚠️ Faltan datos en el formulario')
+
     conexion = conectar()
     if not conexion:
-        print("❌ Error al conectar con la base de datos")
-        return "Error al conectar con la base de datos"
+        return "❌ Error al conectar con la base de datos"
 
     cursor = conexion.cursor()
-    cursor.execute("SELECT * FROM persona WHERE correo_ = %s AND contrase = %s", (correo, contraseña))
+    cursor.execute("""
+        SELECT p.id_persona, r.nombre
+        FROM persona p
+        JOIN rol r ON p.rol_id = r.id_rol
+        WHERE p.correo_ = %s AND p.contrase = %s
+    """, (correo, contraseña))
     usuario = cursor.fetchone()
     conexion.close()
+
     if usuario:
-        print("✅ Usuario encontrado:", usuario)
-        response.set_cookie("usuario_id", str(usuario[0]), path='/')
-        return redirect('/')
+        persona_id, rol = usuario
+        response.set_cookie("persona_id", str(persona_id), path='/')
+        response.set_cookie("rol", rol, path='/')
+
+        if rol in ['admin', 'trabajador']:
+            return redirect('dashboardAdmin')
+        elif rol == 'cliente':
+            return redirect('/')
+        else:
+            return "⚠️ Rol no reconocido"
     else:
-        print("⚠️ Credenciales incorrectas")
-        return "Credenciales incorrectas"
+        return template('login', error='Credenciales incorrectas')
 
 def registrar_usuario(request):
-        nombre = request.forms.get('nombre')
-        apellidoPat = request.forms.get('apellidoPat')
-        apellidoMat = request.forms.get('apellidoMat')
-        correo = request.forms.get('correo_reg')
-        direccion = request.forms.get('direccion')
-        telefono = request.forms.get('telefono')
-        contrase = request.forms.get('pass_reg')
-        if not (nombre and correo and contrase):
-            return "⚠️ Faltan datos obligatorios"
-        conexion = conectar()
-        if not conexion:
-            return "❌ Error al conectar con la base de datos"
-        cursor = conexion.cursor()
-        cursor.execute("SELECT id_rol FROM rol WHERE nombre = 'cliente'")
-        resultado = cursor.fetchone()
-        rol_cliente = resultado[0] if resultado else 2
-        cursor.execute("SELECT id_persona FROM persona WHERE correo_ = %s", (correo,))
-        if cursor.fetchone():
-            conexion.close()
-            return "⚠️ Ya existe una cuenta con ese correo"
-        cursor.execute("""
-            INSERT INTO persona (nombre, apellidoPat, apellidoMat, correo_, direccion, telefono, contrase, rol_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (nombre, apellidoPat, apellidoMat, correo, direccion, telefono, contrase, rol_cliente))
-        conexion.commit()
+    nombre = request.forms.get('nombre')
+    apellidoPat = request.forms.get('apellidoPat')
+    apellidoMat = request.forms.get('apellidoMat')
+    correo = request.forms.get('correo_reg')
+    direccion = request.forms.get('direccion')
+    telefono = request.forms.get('telefono')
+    contrase = request.forms.get('pass_reg')
+
+    if not (nombre and correo and contrase):
+        return "⚠️ Faltan datos obligatorios"
+
+    conexion = conectar()
+    if not conexion:
+        return "❌ Error al conectar con la base de datos"
+
+    cursor = conexion.cursor()
+    cursor.execute("SELECT id_rol FROM rol WHERE nombre = 'cliente'")
+    resultado = cursor.fetchone()
+    rol_cliente = resultado[0] if resultado else 2
+
+    cursor.execute("SELECT id_persona FROM persona WHERE correo_ = %s", (correo,))
+    if cursor.fetchone():
         conexion.close()
-        print(f"✅ Usuario registrado: {correo}")
-        return redirect('/login')
+        return "⚠️ Ya existe una cuenta con ese correo"
+
+    cursor.execute("""
+        INSERT INTO persona (nombre, apellidoPat, apellidoMat, correo_, direccion, telefono, contrase, rol_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (nombre, apellidoPat, apellidoMat, correo, direccion, telefono, contrase, rol_cliente))
+    conexion.commit()
+    conexion.close()
+    return redirect('/login')
+
+def get_stats():
+    conexion = conectar()
+    if not conexion:
+        return {'usuarios': 0, 'productos': 0, 'pedidos': 0, 'inventario_bajo': 0}
+
+    cursor = conexion.cursor()
+    cursor.execute("SELECT COUNT(*) FROM persona")
+    usuarios = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM productos")
+    productos = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM estados_generales WHERE nombre = 'pendiente'")
+    pedidos = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM inventario WHERE cantidad_actual < 40")
+    inventario_bajo = cursor.fetchone()[0]
+
+    conexion.close()
+    return {
+        'usuarios': usuarios,
+        'productos': productos,
+        'pedidos': pedidos,
+        'inventario_bajo': inventario_bajo
+    }
+
+def get_actividades():
+    conexion = conectar()
+    if not conexion:
+        return []
+
+    cursor = conexion.cursor()
+    cursor.execute("""
+        SELECT p.nombre, r.tipo_movimiento, r.fecha, r.cantidad
+        FROM registro_movimientos r
+        JOIN persona p ON r.persona_id = p.id_persona
+        ORDER BY r.fecha DESC
+        LIMIT 10
+    """)
+    filas = cursor.fetchall()
+    conexion.close()
+
+    actividades = []
+    for fila in filas:
+        usuario, accion, fecha, cantidad = fila
+        actividades.append({
+            'usuario': usuario,
+            'accion': accion,
+            'fecha': fecha.strftime('%Y-%m-%d %H:%M'),
+            'cantidad': cantidad
+        })
+    return actividades

@@ -15,7 +15,9 @@
                 <h1>TecnoMax</h1>
             </div>
             <ul class="nav-right">
-                <li><a href="#">Sobre Nosotros</a></li>
+                % if rol in ['admin', 'trabajador']:
+                    <li><a href="/admin">Dashboard</a></li>
+                % end
                 <li><a href="#">Tienda</a></li>
                 <li><a href="#"><i class="fas fa-search"></i></a></li>
                 % if usuario:
