@@ -69,19 +69,40 @@ def registrar_usuario(request):
         return redirect('/login')
 #tienda ver todos los productos
 def traer_productos(categoria_id=None):
-    productos=[]
-    try: 
-        conn= conectar()
+    productos = []
+    try:
+        conn = conectar()
         if conn:
-            cursor= conn.cursor()
+            cursor = conn.cursor()
             if categoria_id:
-                query = "SELECT id_producto, nombre, precio, categoria_id FROM productos WHERE categoria_id = %s;"
+                query = """
+                    SELECT p.id_producto, p.nombre, p.precio, p.descripcion,
+                           c.nombre AS categoria_nombre
+                    FROM productos p
+                    JOIN categorias c ON p.categoria_id = c.id_categoria
+                    WHERE p.categoria_id = %s;
+                """
                 cursor.execute(query, (categoria_id,))
             else:
-                query = "SELECT id_producto, nombre, precio, categoria_id FROM productos;"
+                query = """
+    SELECT p.id_producto, p.nombre, p.precio, p.descripcion,
+           c.nombre AS categoria_nombre
+    FROM productos p
+    JOIN categorias c ON p.categoria_id = c.id_categoria;
+"""
                 cursor.execute(query)
+
             resultados = cursor.fetchall()
-            productos = [dict(zip(['id_producto','nombre','precio','categoria_id'], fila)) for fila in resultados]
+            productos = [
+    {
+        'id_producto': fila[0],
+        'nombre': fila[1],
+        'precio': fila[2],
+        'descripcion': fila[3],
+        'categoria_nombre': fila[4]
+    }
+    for fila in resultados
+]
     except mysql.connector.Error as e:
         print(f"Error al ejecutar la consulta: {e}")
     except Exception as e:
@@ -687,3 +708,68 @@ def get_productos():
         if conn:
             cursor.close()
             conn.close()
+
+def get_categorias():
+    conexion = conectar()
+    if not conexion:
+        return []
+
+    cursor = conexion.cursor()
+    cursor.execute("SELECT id_categoria, nombre, descripcion FROM categorias")
+    categorias = [{
+        'id': c[0],
+        'nombre': c[1],
+        'descripcion': c[2]
+    } for c in cursor.fetchall()]
+    conexion.close()
+    return categorias
+
+def traer_productos():
+    conexion = conectar()
+    cursor = conexion.cursor()
+    cursor.execute("""
+        SELECT p.id_producto, p.nombre, p.descripcion, p.precio, c.nombre AS categoria
+        FROM productos p
+        JOIN categorias c ON p.categoria_id = c.id_categoria
+    """)
+    productos = [{
+        'id_producto': p[0],
+        'nombre': p[1],
+        'descripcion': p[2],
+        'precio': p[3],
+        'categoria': p[4]
+    } for p in cursor.fetchall()]
+    conexion.close()
+    return productos
+
+def traer_categorias():
+    conexion = conectar()
+    cursor = conexion.cursor()
+    cursor.execute("SELECT id_categoria, nombre FROM categorias")
+    categorias = [{'id': c[0], 'nombre': c[1]} for c in cursor.fetchall()]
+    conexion.close()
+    return categorias
+
+def traer_usuarios():
+    conexion = conectar()
+    cursor = conexion.cursor()
+    cursor.execute("""
+        SELECT p.id_persona, p.nombre, p.apellidoPat, p.apellidoMat,
+       p.correo_, p.direccion, p.telefono, r.nombre AS rol
+FROM persona p
+JOIN rol r ON p.rol_id = r.id_rol;
+    """)
+    usuarios = []
+    for fila in cursor.fetchall():
+        usuarios.append({
+            'id_persona': fila[0],
+            'nombre': fila[1],
+            'apellidoPat': fila[2],
+            'apellidoMat': fila[3],
+            'correo': fila[4],
+            'direccion': fila[5],
+            'telefono': fila[6],
+            'rol': fila[7]
+        })
+    conexion.close()
+    return usuarios

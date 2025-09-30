@@ -5,7 +5,7 @@ from dat_tecnomax import (
     traer_productos, get_stats, get_actividades, get_usuarios, calcular_total_carrito, 
     obtener_carrito, actualizar_cantidad_carrito, agregar_al_carrito, eliminar_del_carrito, 
     contar_items_carrito, finalizar_compra, traer_persona_por_id, registrar_bitacora, 
-    actualizar_stock, agregar_producto, get_proveedores, get_categorias, get_productos
+    actualizar_stock, agregar_producto, get_proveedores, get_categorias, get_productos , traer_usuarios
 )
 import os
 
@@ -307,6 +307,99 @@ def form_stock_producto(id):
     if not producto:
         return "Producto no encontrado"
     return template('form_stock', producto=producto)
+
+@app.route('/dashboardAdmin')
+@app.route('/dashboardAdmin/<seccion>')
+def vista_admin(seccion='inicio'):
+    rol = request.get_cookie("rol")
+    if rol not in ['admin', 'trabajador']:
+        return redirect('/login')
+
+    stats = get_stats()
+    actividades = get_actividades()
+    contenido = {}
+
+    # Detectar si se está en modo agregar
+    modo_agregar = request.query.get('agregar') == '1'
+
+    # Cargar contenido según la sección
+    if seccion == 'usuarios':
+        contenido['usuarios'] = get_usuarios()
+    elif seccion == 'categorias':
+        contenido['categorias'] = get_categorias()
+    elif seccion == 'productos':
+        contenido['productos'] = traer_productos()
+
+    return template('dashboardAdmin',
+                    titulo='Panel de Administración',
+                    stats=stats,
+                    actividades=actividades,
+                    seccion=seccion,
+                    contenido=contenido,
+                    modo_agregar=modo_agregar)  # 👈 esta línea es clave
+
+
+@app.post('/crear_categoria')
+def crear_categoria():
+    nombre = request.forms.get('nombre')
+    descripcion = request.forms.get('descripcion')
+
+    if not nombre or not descripcion:
+        return "⚠️ Faltan datos"
+
+    conexion = conectar()
+    cursor = conexion.cursor()
+    cursor.execute("""
+        INSERT INTO categorias (nombre, descripcion)
+        VALUES (%s, %s)
+    """, (nombre, descripcion))
+    conexion.commit()
+    conexion.close()
+
+    return redirect('/dashboardAdmin/categorias')
+
+@app.post('/crear_usuario')
+def crear_usuario():
+    nombre = request.forms.get('nombre')
+    apellidoPat = request.forms.get('apellidoPat')
+    apellidoMat = request.forms.get('apellidoMat')
+    correo = request.forms.get('correo_')
+    direccion = request.forms.get('direccion')
+    telefono = request.forms.get('telefono')
+    contrase = request.forms.get('contrase')
+    rol_id = request.forms.get('rol_id')
+
+    if not nombre or not correo or not contrase:
+        return "⚠️ Faltan datos obligatorios"
+
+    conexion = conectar()
+    cursor = conexion.cursor()
+    cursor.execute("""
+        INSERT INTO persona (nombre, apellidoPat, apellidoMat, correo_, direccion, telefono, contrase, rol_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (nombre, apellidoPat, apellidoMat, correo, direccion, telefono, contrase, rol_id))
+    conexion.commit()
+    conexion.close()
+
+    return redirect('/dashboardAdmin/usuarios')
+
+@app.route('/dashboardAdmin/usuarios')
+def vista_usuarios():
+    rol = request.get_cookie("rol")
+    if rol not in ['admin', 'trabajador']:
+        return redirect('/login')
+
+    modo_agregar = request.query.get('agregar') == '1'
+
+    contenido = {
+        'usuarios': traer_usuarios()
+    }
+
+    return template('dashboardAdmin',
+                    titulo='Panel de Administración',
+                    seccion='usuarios',
+                    contenido=contenido,
+                    modo_agregar=modo_agregar)
 
 if __name__ == '__main__':
     run(app, host='localhost', port=8080, debug=True)

@@ -106,28 +106,121 @@
                     </table>
                 </div>
 
-            % elif seccion == 'usuarios':
+                % elif seccion == 'usuarios':
                 <div class="card">
-                    <h2>Listado de Usuarios</h2>
+                    <h2>Lista de Usuarios</h2>
+                    <div style="margin-bottom: 1em;">
+                        <a href="/dashboardAdmin/usuarios?agregar=1" class="badge primary">➕ Nuevo Usuario</a>
+                    </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Nombre</th>
-                                <th>Correo</th>
-                                <th>Rol</th>
+                                <th>ID</th><th>Nombre</th><th>Apellido Paterno</th><th>Apellido Materno</th>
+                                <th>Correo</th><th>Dirección</th><th>Teléfono</th><th>Rol</th><th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             % for u in contenido.get('usuarios', []):
                             <tr>
+                                <td>{{ u['id_persona'] }}</td>
                                 <td>{{ u['nombre'] }}</td>
+                                <td>{{ u['apellidoPat'] }}</td>
+                                <td>{{ u['apellidoMat'] }}</td>
                                 <td>{{ u['correo'] }}</td>
+                                <td>{{ u['direccion'] }}</td>
+                                <td>{{ u['telefono'] }}</td>
                                 <td>{{ u['rol'] }}</td>
+                                <td>
+                                    <a href="/editar_usuario/{{ u['id_persona'] }}" class="badge success">Editar</a>
+                                    <a href="/activar_usuario/{{ u['id_persona'] }}" class="badge warning">Activar</a>
+                                    <a href="/desactivar_usuario/{{ u['id_persona'] }}" class="badge danger">Desactivar</a>
+                                </td>
                             </tr>
                             % end
                         </tbody>
                     </table>
                 </div>
+
+                % if modo_agregar:
+                <div class="card">
+                    <h2>Agregar Nuevo Usuario</h2>
+                    <form method="post" action="/crear_usuario">
+                        <label>Nombre:</label>
+                        <input type="text" name="nombre" required>
+
+                        <label>Apellido Paterno:</label>
+                        <input type="text" name="apellidoPat" required>
+
+                        <label>Apellido Materno:</label>
+                        <input type="text" name="apellidoMat" required>
+
+                        <label>Correo:</label>
+                        <input type="email" name="correo" required>
+
+                        <label>Dirección:</label>
+                        <input type="text" name="direccion">
+
+                        <label>Teléfono:</label>
+                        <input type="text" name="telefono">
+
+                        <label>Contraseña:</label>
+                        <input type="password" name="contrase" required>
+
+                        <label>Rol:</label>
+                        <select name="rol_id">
+                            <option value="1">Admin</option>
+                            <option value="2">Trabajador</option>
+                            <option value="3" selected>Cliente</option>
+                        </select>
+
+                        <button type="submit" class="badge success">Registrar Usuario</button>
+                    </form>
+                </div>
+                % end
+
+            % elif seccion == 'categorias':
+                <div class="card">
+                    <h2>Lista de Categorías</h2>
+                    <div style="margin-bottom: 1em;">
+                        <a href="/dashboardAdmin/categorias?agregar=1" class="badge primary">➕ Añadir Categoría</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            % for c in contenido.get('categorias', []):
+                            <tr>
+                                <td>{{ c['id'] }}</td>
+                                <td>{{ c['nombre'] }}</td>
+                                <td>{{ c['descripcion'] }}</td>
+                                <td>
+                                    <a href="/editar_categoria/{{ c['id'] }}" class="badge success">Editar</a>
+                                    <a href="/desactivar_categoria/{{ c['id'] }}" class="badge warning">Desactivar</a>
+                                </td>
+                            </tr>
+                            % end
+                        </tbody>
+                    </table>
+                </div>
+
+                % if modo_agregar:
+                <div class="card">
+                    <h2>Añadir Nueva Categoría</h2>
+                    <form method="post" action="/crear_categoria">
+                        <label>Nombre:</label>
+                        <input type="text" name="nombre" required>
+
+                        <label>Descripción:</label>
+                        <input type="text" name="descripcion" required>
+
+                        <button type="submit" class="badge success">Guardar Categoría</button>
+                    </form>
+                </div>
+                % end
+            </tbody>
+        </table>
+    </div>
 
             % elif seccion == 'productos':
                 <div class="card">
