@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/estiloP.css">
+    <title>Checkout - TecnoMax</title>
+</head>
+<body>
+    <main>
+        <h1 class="checkout-title">Finalizar Compra</h1>
+
+        % if carrito and len(carrito) > 0:
+            <div class="checkout-container">
+                <!-- Resumen del Carrito -->
+                <div class="checkout-resumen">
+                    <h3>Resumen de tu Pedido</h3>
+                    <table class="checkout-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            % for item in carrito:
+                                <tr>
+                                    <td>{{item['nombre']}}</td>
+                                    <td>{{item['cantidad']}}</td>
+                                    <td>Bs. {{item['subtotal']}}</td>
+                                </tr>
+                            % end
+                        </tbody>
+                    </table>
+                    <div class="resumen-linea">
+                        <span>Subtotal</span>
+                        <span>Bs. {{subtotal}}</span>
+                    </div>
+                    <div class="resumen-linea total">
+                        <span>Total</span>
+                        <span>Bs. {{subtotal}}</span> <!-- Sin envío por ser sucursal única -->
+                    </div>
+                </div>
+
+                <!-- Formulario de Checkout -->
+                <div class="checkout-form">
+                    <h3>Detalles del Pedido</h3>
+                    <form action="/procesar-compra" method="POST">
+                        <div class="form-group">
+                            <label for="direccion_entrega">Dirección de Entrega (Sucursal TecnoMax)</label>
+                            <input type="text" id="direccion_entrega" name="direccion_entrega" value="{{usuario.get('direccion', 'Sucursal TecnoMax, Av. Principal #123') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="metodo_pago">Método de Pago</label>
+                            <select id="metodo_pago" name="metodo_pago" required>
+                                <option value="qr">Pago por Qr </option>
+                                <option value="efectivo">Efectivo </option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primario btn-block">Ir a Pagar</button>
+                    </form>
+                </div>
+            </div>
+        % else:
+            <div class="carrito-vacio">
+                <div class="carrito-vacio-icono">🛒</div>
+                <h3>Tu carrito está vacío</h3>
+                <p>Agrega productos para continuar con tu pedido.</p>
+                <a href="/tienda" class="btn btn-primario">Ir a la Tienda</a>
+            </div>
+        % end
+    </main>
+</body>
+</html>

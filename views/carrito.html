@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/estiloP.css">
+    <title>Carrito - TecnoMax</title>
+</head>
+<body>
+    <h1 class="carrito-title">Carrito</h1>
+
+        % if carrito and len(carrito) > 0:
+            <!-- SI HAY PRODUCTOS EN EL CARRITO -->
+            <div class="carrito-container">
+                <!-- TABLA DE PRODUCTOS -->
+                <div class="carrito-productos">
+                    <form action="/actualizar-carrito" method="POST">
+                        <table class="carrito-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                % for item in carrito:
+                                    <tr>
+                                        <!-- PRODUCTO -->
+                                        <td data-label="Producto">
+                                            <div class="producto-info-table">
+                                                <div class="producto-imagen-table">
+                                                    <!-- Placeholder icon -->
+                                                    📦
+                                                </div>
+                                                <div class="producto-nombre-table">
+                                                    {{item['nombre']}}
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- PRECIO -->
+                                        <td data-label="Precio" class="precio-table">
+                                            Bs. {{item['precio']}}
+                                        </td>
+
+                                        <!-- CANTIDAD -->
+                                        <td data-label="Cantidad">
+                                            <input 
+                                                type="number" 
+                                                name="cantidad_{{item['id_carrito']}}"
+                                                class="cantidad-input" 
+                                                value="{{item['cantidad']}}" 
+                                                min="1" 
+                                                max="10"
+                                            >
+                                        </td>
+
+                                        <!-- SUBTOTAL -->
+                                        <td data-label="Subtotal" class="subtotal-table">
+                                            Bs. {{item['subtotal']}}
+                                        </td>
+
+                                        <!-- ELIMINAR -->
+                                        <td>
+                                            <form action="/eliminar-carrito/{{item['id_carrito']}}" method="POST" style="display: inline;">
+                                                <button type="submit" class="eliminar-btn" title="Eliminar producto">
+                                                    ✕
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                % end
+                            </tbody>
+                        </table>
+
+                        <!-- BOTÓN ACTUALIZAR CARRITO -->
+                        <button type="submit" class="actualizar-carrito">
+                            Actualizar Carrito
+                        </button>
+                    </form>
+                </div>
+
+                <!-- RESUMEN DEL CARRITO -->
+                <div class="carrito-resumen">
+                    <h3>Total del Carrito</h3>
+
+                    <!-- SUBTOTAL -->
+                    <div class="resumen-linea">
+                        <span>Subtotal</span>
+                        <span>Bs. {{subtotal}}</span>
+                    </div>
+
+                    <!-- OPCIONES DE ENVÍO -->
+                    <div class="opciones-envio">
+                        <h4>Envío</h4>
+                        
+                        <div class="opcion-envio">
+                            <input type="radio" id="recojo1" name="envio" value="recojo" checked>
+                            <label for="recojo1">Zona central</label>
+                            <span class="precio-envio">Gratis</span>
+                        </div>
+
+                        <div class="opcion-envio">
+                            <input type="radio" id="recojo2" name="envio" value="recojo">
+                            <label for="recojo2">Zona Sur</label>
+                            <span class="precio-envio">Gratis</span>
+                        </div>
+
+                        <div class="opcion-envio">
+                            <input type="radio" id="recojo3" name="envio" value="recojo">
+                            <label for="recojo3">Zona Este</label>
+                            <span class="precio-envio">Gratis </span>
+                        </div>
+
+                    </div>
+
+                    <!-- TOTAL -->
+                    <div class="resumen-linea total">
+                        <span>Total</span>
+                        <span>Bs. {{total}}</span>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <a href="/checkout" class="btn btn-primario btn-block" style="margin-bottom: 1rem;">
+                        Finalizar compra
+                    </a>
+
+                    <a href="/tienda" class="btn btn-secundario btn-block">
+                        Seguir comprando
+                    </a>
+
+                    <!-- CUPÓN (OPCIONAL - Comentado por defecto) -->
+                    <!--
+                    <div class="cupon-section">
+                        <form action="/aplicar-cupon" method="POST">
+                            <div class="cupon-input-group">
+                                <input type="text" name="cupon" placeholder="Código de cupón">
+                                <button type="submit" class="btn-cupon">Aplicar</button>
+                            </div>
+                        </form>
+                    </div>
+                    -->
+                </div>
+            </div>
+
+        % else:
+            <!-- SI EL CARRITO ESTÁ VACÍO -->
+            <div class="carrito-vacio">
+                <div class="carrito-vacio-icono">🛒</div>
+                <h3>No hay nada aún en el carrito</h3>
+                <p>Explora nuestra tienda y encuentra productos increíbles</p>
+                <a href="/tienda" class="btn btn-primario">
+                    Ir a la tienda
+                </a>
+            </div>
+        % end
+    </div>
+
+    <!-- INCLUIR TU FOOTER AQUÍ -->
+
+    <script>
+        // Script para actualizar cantidades dinámicamente (opcional)
+        document.querySelectorAll('.cantidad-input').forEach(input => {
+            input.addEventListener('change', function() {
+                // Aquí puedes hacer una petición AJAX para actualizar el carrito
+                console.log('Cantidad actualizada:', this.value);
+            });
+        });
+    </script>
+</body>
+</html>

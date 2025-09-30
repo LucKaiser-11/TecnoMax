@@ -8,11 +8,9 @@
 </head>
 <body>
     <header>
-        <nav class="navbar">
-            
-
+        <nav class="navbar">            
             <div class="logo">
-                <h1>TecnoMax</h1>
+                <h1>🛒 TecnoMax</h1>
             </div>
             <ul class="nav-right">
                 % if rol in ['admin', 'trabajador']:
@@ -20,10 +18,13 @@
                 % end
                 <li><a href="/tienda">Tienda</a></li>
                 <li>
-                    <form action="/busqueda" method="post" class="search-form">
-                        <input type="text" name="filtro" placeholder="Buscar producto...">
-                        <button type="submit"><i class="fas fa-search"></i>Buscar producto</button>
-                    </form>
+                    <div class="search-bar">
+                        <form action="/busqueda" method="post" class="search-form">
+                            <input type="text" name="filtro" placeholder="Buscar producto...">
+                            <button class="btn btn-primario" type="submit"><i class="fas fa-search"></i>Buscar producto</button>
+                        </form>
+                    </div>
+                    
                 </li>
 
                 % if usuario:
@@ -32,7 +33,7 @@
                 % else:
                     <li><a href="/login"><i class="fas fa-user"></i></a></li>
                 % end
-                <li><a href="#"><i class="fas fa-shopping-bag"></i></a></li>
+                <li><a href="/agregar-carrito"><i class="fas fa-shopping-bag"></i> Carrito</a></li>
             </ul>
         </nav>
     </header>
